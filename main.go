@@ -3,20 +3,49 @@ package main
 import (
 	"fmt"
 	"net"
-	"sync"
+	"sort"
 )
 
+func worker(ports, results chan int) {
+	for p := range ports {
+		address := fmt.Sprintf("scanme.nmap.org:%d", p)
+		fmt.Printf("Dialing port: %d\n", p)
+		conn, err := net.Dial("tcp", address)
+		if err != nil {
+			results <- 0
+			continue
+		}
+		conn.Close()
+		results <- p
+	}
+}
+
 func main() {
-	var wg sync.WaitGroup
-	for i := 1; i<= 1024; i++ {
-		wg.Add(1)
-		address := fmt.Sprintf("scanme.nmap.org:%d", i)
-		_, err := net.Dial("tcp", address)
-		if err == nil {
-			fmt.Printf("Connection Successful at port: %d\n", i)
-		} else {
-			fmt.Printf("There was a problem connecting to host at port: %d\n", i)
+	ports := make(chan int, 100)
+	results := make(chan int)
+	var openports []int
+
+	for i := 0; i < cap(ports); i++ {
+		go worker(ports, results)
+	}
+
+	go func() {
+		for i := 1; i < 1024; i++ {
+			ports <- i
+		}
+	}()
+
+	for i := 0; i < 1024; i++ {
+		port := <-results
+		if port != 0 {
+			openports = append(openports, port)
 		}
 	}
 
+	close(ports)
+	close(results)
+	sort.Ints(openports)
+	for _, port := range openports {
+		fmt.Printf("%d open\n", port)
+	}
 }
