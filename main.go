@@ -13,6 +13,7 @@ import (
 var version = "1.0"
 var target string
 var maxport = 1024
+var threads = 10
 
 func init() {
 	flaggy.SetName("Gmap")
@@ -21,7 +22,8 @@ func init() {
 	flaggy.DefaultParser.ShowHelpOnUnexpected = true
 
 	flaggy.String(&target, "t", "target", "The target host to scan")
-	flaggy.Int(&maxport, "p", "ports", "Max port number to go to. Default is 1024.")
+	flaggy.Int(&maxport, "p", "ports", "Max port number to go to.")
+	flaggy.Int(&threads, "T", "threads", "The number of threads to run. (faster will decrease accuracy, but its more fun!)")
 
 	flaggy.Parse()
 }
@@ -47,8 +49,8 @@ func thread(ports, results chan int) {
 
 func main() {
 	//BEGIN BANNER
-	underline := strings.Repeat("=", 40)
-	banner := figure.NewFigure("Gmap", "slant", true)
+	underline := strings.Repeat("=", 39)
+	banner := figure.NewFigure("Gmap", "speed", true)
 	banner.Print()
 	fmt.Println(underline)
 	//END BANNER
@@ -61,7 +63,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	ports := make(chan int, 100)
+	ports := make(chan int, threads)
 	results := make(chan int)
 	var openports []int
 
