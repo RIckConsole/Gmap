@@ -21,6 +21,7 @@ func init() {
 	flaggy.DefaultParser.ShowHelpOnUnexpected = true
 
 	flaggy.String(&target, "t", "target", "The target host to scan")
+	flaggy.Int(&maxport, "p", "ports", "Max port number to go to. Default is 1024.")
 
 	flaggy.Parse()
 }
@@ -31,6 +32,7 @@ func thread(ports, results chan int) {
 		conn, err := net.Dial("tcp", address)
 		//fmt.Printf("Dialing: %d\n", p)
 		if p == maxport {
+			fmt.Println("[*] Scan complete!")
 			os.Exit(0)
 		}
 		if err != nil {
@@ -54,9 +56,12 @@ func main() {
 	if target == "" {
 		fmt.Println("Please specify a target. Use Gmap -h for help.")
 		os.Exit(0)
+	} else if maxport > 65535 {
+		fmt.Println("Port number is too high. Max is 65535")
+		os.Exit(0)
 	}
 
-	ports := make(chan int, 500)
+	ports := make(chan int, 100)
 	results := make(chan int)
 	var openports []int
 
