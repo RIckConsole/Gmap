@@ -8,6 +8,7 @@ import (
 	"github.com/integrii/flaggy"
 	"github.com/common-nighthawk/go-figure"
 	"strings"
+	c "github.com/TreyBastian/colourize"
 )
 
 var version = "1.0"
@@ -34,14 +35,15 @@ func thread(ports, results chan int) {
 		conn, err := net.Dial("tcp", address)
 		//fmt.Printf("Dialing: %d\n", p)
 		if p == maxport {
-			fmt.Println("[*] Scan complete!")
+			fmt.Println(c.Colourize("[*] Scan complete!", c.Blue))
 			os.Exit(0)
 		}
 		if err != nil {
 			results <- 0
 			continue
 		}
-		fmt.Printf("Open: %d\n", p)
+		openport := fmt.Sprintf("[*] Open: %d", p)
+		fmt.Println(c.Colourize(openport, c.Green, c.Bold))
 		conn.Close()
 		results <- p
 	}
